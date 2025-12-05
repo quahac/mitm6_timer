@@ -357,6 +357,7 @@ def main():
     parser.add_argument("-r", "--relay", type=str, metavar='TARGET', help="Authentication relay target, will be used as fake DNS server hostname to trigger Kerberos auth")
     parser.add_argument("-v", "--verbose", action='store_true', help="Show verbose information")
     parser.add_argument("--debug", action='store_true', help="Show debug information")
+    parser.add_argument("--timer", type=int, metavar='MINUTES', help="Stop mitm6 after MINUTES")
 
     filtergroup = parser.add_argument_group("Filtering options")
     filtergroup.add_argument("-d", "--domain", action='append', default=[], metavar='DOMAIN', help="Domain name to filter DNS queries on (Allowlist principle, multiple can be specified.)")
@@ -367,6 +368,14 @@ def main():
 
     args = parser.parse_args()
     config = Config(args)
+    if args.timer:
+        print('mitm6 will stop automatically in %d minute(s).' % args.timer)
+        def stop_mitm6():
+            print('\n[+] Timer expired — stopping mitm6...')
+            # Stop the program
+            reactor.stop()
+        # Schedule stop after N minutes
+        reactor.callLater(args.timer * 60, stop_mitm6)
 
     print('Starting mitm6 using the following configuration:')
     print('Primary adapter: %s [%s]' % (config.default_if, config.selfmac))
@@ -376,6 +385,20 @@ def main():
         print('DNS local search domain: %s' % config.localdomain)
     if not config.dns_allowlist and not config.dns_blocklist:
         print('Warning: Not filtering on any domain, mitm6 will reply to all DNS queries.\nUnless this is what you want, specify at least one domain with -d')
+
+        # Auto-shutdown if no timer was specified
+        if not args.timer:
+            print('[!] No domain specified — mitm6 will automatically stop in 15 minutes.')
+
+            def autodomain_shutdown():
+                print('\n[+] No domain was set — auto-shutdown triggered.')
+                reactor.stop()
+
+            # Schedule shutdown in 15 minutes
+            reactor.callLater(15 * 60, autodomain_shutdown)
+
+
+        
     else:
         if not config.dns_allowlist:
             print('DNS allowlist: *')
