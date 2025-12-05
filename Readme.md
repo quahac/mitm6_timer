@@ -5,6 +5,9 @@
 
 mitm6 is a pentesting tool that exploits the default configuration of Windows to take over the default DNS server. It does this by replying to DHCPv6 messages, providing victims with a link-local IPv6 address and setting the attackers host as default DNS server. As DNS server, mitm6 will selectively reply to DNS queries of the attackers choosing and redirect the victims traffic to the attacker machine instead of the legitimate server. For a full explanation of the attack, see our [blog about mitm6](https://blog.fox-it.com/2018/01/11/mitm6-compromising-ipv4-networks-via-ipv6/). Mitm6 is designed to work together with [ntlmrelayx from impacket](https://github.com/CoreSecurity/impacket) for WPAD spoofing and credential relaying.
 
+**New functionality:** mitm6 now includes an automatic shutdown mechanism for safer usage.  
+If no DNS domain filter is provided using the `--domain` option, mitm6 will automatically stop after 15 minutes to avoid unintended impact on the entire network. A custom shutdown time can be configured with the `--timer` parameter, which overrides the default 15-minute shutdown.
+
 ## Dependencies and installation
 mitm6 is compatible with both Python 2.7 and 3.x. You can install the requirements for your version with `pip install -r requirements.txt`. In both cases, mitm6 uses the following packages:
 - Scapy
@@ -41,6 +44,7 @@ optional arguments:
                         Authentication relay target, will be used as fake DNS server hostname to trigger Kerberos auth
   -v, --verbose         Show verbose information
   --debug               Show debug information
+  --timer MINUTES Automatically stop mitm6 after MINUTES (overrides the default auto-shutdown)
 
 Filtering options:
   -d DOMAIN, --domain DOMAIN
